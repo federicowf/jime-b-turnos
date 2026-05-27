@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jime B · Turnos
 
-## Getting Started
+App web mobile-first para reservar turnos en **Jime B Dance & Training** (San Miguel de Tucumán).
 
-First, run the development server:
+Prototipo armado por Fede para mostrarle la idea a Facu.
+
+## Idea
+
+Hoy el gimnasio coordina cada turno por WhatsApp uno por uno. La app deja que cada alumna:
+
+- Vea la semana completa con cupos disponibles
+- Reserve y cancele turnos desde el celu
+- Vea sus próximos turnos en un solo lugar
+
+Sin app que descargar — entra desde el navegador del celular y queda como PWA.
+
+## Estado actual
+
+Es un **prototipo cliqueable**:
+
+- Login fake (nombre + número de celular) que guarda en `localStorage`
+- Datos de mentira generados pseudo-random (cupos por horario)
+- Las reservas se persisten en el navegador del usuario
+- Sin backend ni base de datos todavía
+
+## Stack
+
+- Next.js 16 (App Router) + React 19
+- Tailwind CSS 4
+- TypeScript
+- `lucide-react` para iconos
+- Deploy: Vercel
+
+## Correr local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abrir [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Próximos pasos (cuando le copen la idea)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. Backend real — Supabase con auth por celular
+2. Panel admin para Jime y Facu (ver inscriptos del día, marcar asistencia, agregar/quitar horarios)
+3. Recordatorios por WhatsApp 1h antes
+4. Lista de espera cuando hay cupo completo
+5. Cuotas / pagos
 
-## Learn More
+## Estructura
 
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```
+src/
+├── app/                    rutas (layout + page)
+├── components/             AppShell + vistas + UI
+│   ├── AppShell.tsx        orquesta login / tabs
+│   ├── LoginGate.tsx       gate inicial
+│   ├── TurnosView.tsx      home: semana + slots
+│   ├── MisTurnosView.tsx   reservas del usuario
+│   ├── PerfilView.tsx      datos del usuario y gym
+│   ├── BottomNav.tsx       tabs inferiores
+│   ├── BrandHeader.tsx     header con marca
+│   ├── WeekStrip.tsx       selector de día
+│   ├── SlotCard.tsx        tarjeta de turno
+│   └── SlotSheet.tsx       bottom sheet para reservar
+└── lib/
+    ├── mock.ts             config del gym + slots template + cupos pseudo-random
+    ├── store.ts            localStorage + hooks
+    ├── fmt.ts              helpers de fecha/teléfono
+    └── types.ts            tipos compartidos
+```

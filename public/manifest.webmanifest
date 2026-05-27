@@ -1,0 +1,18 @@
+{
+  "name": "Jime B · Turnos",
+  "short_name": "Jime B",
+  "description": "Reservá tu turno en Jime B Dance & Training",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#fdf7fa",
+  "theme_color": "#e0337f",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
