@@ -18,24 +18,38 @@ function subscribe(l: Listener) {
   return () => listeners.delete(l);
 }
 
+const EMPTY_BOOKINGS: Booking[] = [];
+
+let bookingsRawCache: string | null | undefined = undefined;
+let bookingsValueCache: Booking[] = EMPTY_BOOKINGS;
+
 function readUser(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(USER_KEY);
 }
 
 function readBookings(): Booking[] {
-  if (typeof window === "undefined") return [];
+  if (typeof window === "undefined") return EMPTY_BOOKINGS;
   const raw = window.localStorage.getItem(BOOKINGS_KEY);
-  if (!raw) return [];
-  try {
-    return JSON.parse(raw) as Booking[];
-  } catch {
-    return [];
+  if (raw === bookingsRawCache) return bookingsValueCache;
+  bookingsRawCache = raw;
+  if (!raw) {
+    bookingsValueCache = EMPTY_BOOKINGS;
+  } else {
+    try {
+      bookingsValueCache = JSON.parse(raw) as Booking[];
+    } catch {
+      bookingsValueCache = EMPTY_BOOKINGS;
+    }
   }
+  return bookingsValueCache;
 }
 
 function writeBookings(b: Booking[]) {
-  window.localStorage.setItem(BOOKINGS_KEY, JSON.stringify(b));
+  const serialized = JSON.stringify(b);
+  window.localStorage.setItem(BOOKINGS_KEY, serialized);
+  bookingsRawCache = serialized;
+  bookingsValueCache = b;
   emit();
 }
 
@@ -47,6 +61,8 @@ export function setUser(phone: string) {
 export function clearUser() {
   window.localStorage.removeItem(USER_KEY);
   window.localStorage.removeItem(BOOKINGS_KEY);
+  bookingsRawCache = null;
+  bookingsValueCache = EMPTY_BOOKINGS;
   emit();
 }
 
@@ -61,12 +77,15 @@ export function removeBooking(slotId: string, date: string) {
   writeBookings(current.filter((b) => !(b.slotId === slotId && b.date === date)));
 }
 
+const SERVER_USER = null;
+const SERVER_BOOKINGS: Booking[] = EMPTY_BOOKINGS;
+
 export function useUser(): string | null {
-  return useSyncExternalStore(subscribe, readUser, () => null);
+  return useSyncExternalStore(subscribe, readUser, () => SERVER_USER);
 }
 
 export function useBookings(): Booking[] {
-  return useSyncExternalStore(subscribe, readBookings, () => []);
+  return useSyncExternalStore(subscribe, readBookings, () => SERVER_BOOKINGS);
 }
 
 export function useHydrated(): boolean {
