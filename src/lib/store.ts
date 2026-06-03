@@ -2,9 +2,11 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import type { Booking } from "./types";
+import { DEFAULT_SUCURSAL_ID } from "./mock";
 
 const USER_KEY = "jb.user";
 const BOOKINGS_KEY = "jb.bookings";
+const SUCURSAL_KEY = "jb.sucursal";
 
 type Listener = () => void;
 const listeners = new Set<Listener>();
@@ -26,6 +28,11 @@ let bookingsValueCache: Booking[] = EMPTY_BOOKINGS;
 function readUser(): string | null {
   if (typeof window === "undefined") return null;
   return window.localStorage.getItem(USER_KEY);
+}
+
+function readSucursal(): string {
+  if (typeof window === "undefined") return DEFAULT_SUCURSAL_ID;
+  return window.localStorage.getItem(SUCURSAL_KEY) ?? DEFAULT_SUCURSAL_ID;
 }
 
 function readBookings(): Booking[] {
@@ -58,6 +65,11 @@ export function setUser(phone: string) {
   emit();
 }
 
+export function setSucursal(id: string) {
+  window.localStorage.setItem(SUCURSAL_KEY, id);
+  emit();
+}
+
 export function clearUser() {
   window.localStorage.removeItem(USER_KEY);
   window.localStorage.removeItem(BOOKINGS_KEY);
@@ -66,15 +78,17 @@ export function clearUser() {
   emit();
 }
 
-export function addBooking(slotId: string, date: string) {
+export function addBooking(slotId: string, date: string, sucursalId: string) {
   const current = readBookings();
-  if (current.some((b) => b.slotId === slotId && b.date === date)) return;
-  writeBookings([...current, { slotId, date, bookedAt: new Date().toISOString() }]);
+  if (current.some((b) => b.slotId === slotId && b.date === date && b.sucursalId === sucursalId)) return;
+  writeBookings([...current, { slotId, date, sucursalId, bookedAt: new Date().toISOString() }]);
 }
 
-export function removeBooking(slotId: string, date: string) {
+export function removeBooking(slotId: string, date: string, sucursalId: string) {
   const current = readBookings();
-  writeBookings(current.filter((b) => !(b.slotId === slotId && b.date === date)));
+  writeBookings(
+    current.filter((b) => !(b.slotId === slotId && b.date === date && b.sucursalId === sucursalId)),
+  );
 }
 
 const SERVER_USER = null;
@@ -82,6 +96,10 @@ const SERVER_BOOKINGS: Booking[] = EMPTY_BOOKINGS;
 
 export function useUser(): string | null {
   return useSyncExternalStore(subscribe, readUser, () => SERVER_USER);
+}
+
+export function useSucursal(): string {
+  return useSyncExternalStore(subscribe, readSucursal, () => DEFAULT_SUCURSAL_ID);
 }
 
 export function useBookings(): Booking[] {
@@ -97,7 +115,7 @@ export function useHydrated(): boolean {
 export function useStorageSync() {
   useEffect(() => {
     function onStorage(e: StorageEvent) {
-      if (e.key === USER_KEY || e.key === BOOKINGS_KEY) emit();
+      if (e.key === USER_KEY || e.key === BOOKINGS_KEY || e.key === SUCURSAL_KEY) emit();
     }
     window.addEventListener("storage", onStorage);
     return () => window.removeEventListener("storage", onStorage);

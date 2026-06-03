@@ -2,12 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { useBookings } from "@/lib/store";
-import { SLOT_TEMPLATES, preloadedTakenFor } from "@/lib/mock";
+import { SLOT_TEMPLATES, preloadedTakenFor, sucursalById } from "@/lib/mock";
 import { dayNameFull, monthShort, parseISODate, toISODate } from "@/lib/fmt";
 import type { DaySlot } from "@/lib/types";
 import { BrandHeader } from "./BrandHeader";
 import { SlotSheet } from "./SlotSheet";
-import { Calendar, Ticket } from "lucide-react";
+import { Calendar, MapPin, Ticket } from "lucide-react";
 
 export function MisTurnosView() {
   const bookings = useBookings();
@@ -20,10 +20,10 @@ export function MisTurnosView() {
       .sort((a, b) => (a.date === b.date ? a.slotId.localeCompare(b.slotId) : a.date.localeCompare(b.date)));
   }, [bookings]);
 
-  function openBooking(slotId: string, date: string) {
+  function openBooking(slotId: string, date: string, sucursalId: string) {
     const tmpl = SLOT_TEMPLATES.find((t) => t.id === slotId);
     if (!tmpl) return;
-    const taken = preloadedTakenFor(slotId, date, tmpl.capacity) + 1;
+    const taken = preloadedTakenFor(slotId, date, tmpl.capacity, sucursalId) + 1;
     setOpenSlot({
       templateId: tmpl.id,
       date,
@@ -31,6 +31,7 @@ export function MisTurnosView() {
       capacity: tmpl.capacity,
       taken: Math.min(tmpl.capacity, taken),
       mine: true,
+      sucursalId,
     });
   }
 
@@ -53,10 +54,11 @@ export function MisTurnosView() {
               const tmpl = SLOT_TEMPLATES.find((t) => t.id === b.slotId);
               if (!tmpl) return null;
               const date = parseISODate(b.date);
+              const sucursal = sucursalById(b.sucursalId);
               return (
                 <button
-                  key={`${b.slotId}-${b.date}`}
-                  onClick={() => openBooking(b.slotId, b.date)}
+                  key={`${b.slotId}-${b.date}-${b.sucursalId}`}
+                  onClick={() => openBooking(b.slotId, b.date, b.sucursalId)}
                   className="w-full flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-brand-50 to-brand-100 border border-brand-500/30 active:scale-[0.99] transition text-left"
                 >
                   <div className="w-14 h-14 rounded-xl bg-brand-500 text-white grid place-items-center">
@@ -70,6 +72,10 @@ export function MisTurnosView() {
                     <div className="text-sm text-brand-700 flex items-center gap-1.5 mt-0.5">
                       <Calendar size={13} strokeWidth={2} />
                       <span>{tmpl.time} hs</span>
+                    </div>
+                    <div className="text-xs text-muted-fg flex items-center gap-1.5 mt-0.5 truncate">
+                      <MapPin size={12} strokeWidth={2} />
+                      <span className="truncate">{sucursal.name}</span>
                     </div>
                   </div>
                   <div className="text-xs text-brand-700 font-medium">Detalle ›</div>

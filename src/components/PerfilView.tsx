@@ -2,7 +2,7 @@
 
 import { clearUser, useUser } from "@/lib/store";
 import { formatPhone } from "@/lib/fmt";
-import { GYM } from "@/lib/mock";
+import { GYM, SUCURSALES } from "@/lib/mock";
 import { BrandHeader } from "./BrandHeader";
 import { AtSign, LogOut, MapPin, Phone } from "lucide-react";
 
@@ -24,10 +24,19 @@ export function PerfilView() {
         </div>
 
         <h3 className="text-xs uppercase tracking-wider font-semibold text-muted-fg mt-7 mb-2.5 px-1">
+          Sucursales
+        </h3>
+        <div className="rounded-2xl bg-surface border border-border divide-y divide-border">
+          {SUCURSALES.map((s) => (
+            <Row key={s.id} icon={<MapPin size={18} />} label={s.name} value={s.address} />
+          ))}
+        </div>
+
+        <h3 className="text-xs uppercase tracking-wider font-semibold text-muted-fg mt-7 mb-2.5 px-1">
           El gimnasio
         </h3>
         <div className="rounded-2xl bg-surface border border-border divide-y divide-border">
-          <Row icon={<MapPin size={18} />} label="Dirección" value={GYM.city} />
+          <Row icon={<MapPin size={18} />} label="Ciudad" value={GYM.city} />
           <Row icon={<AtSign size={18} />} label="Instagram" value={GYM.ig} />
           <Row icon={<Phone size={18} />} label="WhatsApp" value="381 555-9000" />
         </div>

@@ -2,13 +2,14 @@
 
 import { useMemo, useState } from "react";
 import { SLOT_TEMPLATES, preloadedTakenFor } from "@/lib/mock";
-import { useBookings } from "@/lib/store";
+import { useBookings, useSucursal } from "@/lib/store";
 import { dayNameFull, monthShort, nextDays, toISODate } from "@/lib/fmt";
 import type { DaySlot } from "@/lib/types";
 import { WeekStrip } from "./WeekStrip";
 import { SlotCard } from "./SlotCard";
 import { SlotSheet } from "./SlotSheet";
 import { BrandHeader } from "./BrandHeader";
+import { SucursalSwitcher } from "./SucursalSwitcher";
 
 export function TurnosView() {
   const [selected, setSelected] = useState<Date>(() => {
@@ -18,6 +19,7 @@ export function TurnosView() {
   });
   const [openSlot, setOpenSlot] = useState<DaySlot | null>(null);
   const bookings = useBookings();
+  const sucursalId = useSucursal();
 
   const days = useMemo(() => {
     const start = new Date();
@@ -27,9 +29,11 @@ export function TurnosView() {
   const slotsForDay = useMemo<DaySlot[]>(() => {
     const dow = selected.getDay();
     const iso = toISODate(selected);
-    const mineSet = new Set(bookings.filter((b) => b.date === iso).map((b) => b.slotId));
+    const mineSet = new Set(
+      bookings.filter((b) => b.date === iso && b.sucursalId === sucursalId).map((b) => b.slotId),
+    );
     return SLOT_TEMPLATES.filter((t) => t.dayOfWeek === dow).map((t) => {
-      const preloaded = preloadedTakenFor(t.id, iso, t.capacity);
+      const preloaded = preloadedTakenFor(t.id, iso, t.capacity, sucursalId);
       const mine = mineSet.has(t.id);
       return {
         templateId: t.id,
@@ -38,15 +42,17 @@ export function TurnosView() {
         capacity: t.capacity,
         taken: Math.min(t.capacity, preloaded + (mine ? 1 : 0)),
         mine,
+        sucursalId,
       };
     });
-  }, [selected, bookings]);
+  }, [selected, bookings, sucursalId]);
 
   const isClosed = selected.getDay() === 0;
 
   return (
     <>
       <BrandHeader subtitle={`${dayNameFull(selected)} ${selected.getDate()} de ${monthShort(selected)}`} />
+      <SucursalSwitcher />
       <WeekStrip days={days} selected={selected} onSelect={setSelected} />
 
       <main className="px-5 pb-32">

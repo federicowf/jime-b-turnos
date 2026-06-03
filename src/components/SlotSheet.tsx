@@ -4,6 +4,8 @@ import { useEffect } from "react";
 import type { DaySlot } from "@/lib/types";
 import { addBooking, removeBooking } from "@/lib/store";
 import { dayNameFull, parseISODate } from "@/lib/fmt";
+import { sucursalById } from "@/lib/mock";
+import { MapPin } from "lucide-react";
 
 export function SlotSheet({ slot, onClose }: { slot: DaySlot | null; onClose: () => void }) {
   useEffect(() => {
@@ -19,14 +21,15 @@ export function SlotSheet({ slot, onClose }: { slot: DaySlot | null; onClose: ()
 
   const date = parseISODate(slot.date);
   const dayName = dayNameFull(date);
+  const sucursal = sucursalById(slot.sucursalId);
   const free = slot.capacity - slot.taken;
   const isFull = free <= 0 && !slot.mine;
 
   function handleAction() {
     if (slot!.mine) {
-      removeBooking(slot!.templateId, slot!.date);
+      removeBooking(slot!.templateId, slot!.date, slot!.sucursalId);
     } else if (!isFull) {
-      addBooking(slot!.templateId, slot!.date);
+      addBooking(slot!.templateId, slot!.date, slot!.sucursalId);
     }
     onClose();
   }
@@ -49,6 +52,12 @@ export function SlotSheet({ slot, onClose }: { slot: DaySlot | null; onClose: ()
           <div className="flex items-baseline gap-2 mt-1">
             <h2 className="text-4xl font-bold tracking-tight">{slot.time}</h2>
             <span className="text-muted-fg text-sm">hs</span>
+          </div>
+
+          <div className="mt-3 flex items-center gap-1.5 text-sm text-brand-700">
+            <MapPin size={15} strokeWidth={2.2} />
+            <span className="font-medium">{sucursal.name}</span>
+            <span className="text-muted-fg">· {sucursal.address}</span>
           </div>
 
           <div className="mt-6 p-4 rounded-2xl bg-muted">

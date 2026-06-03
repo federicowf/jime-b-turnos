@@ -1,3 +1,9 @@
+export type Sucursal = {
+  id: string;
+  name: string;
+  address: string;
+};
+
 export type SlotTemplate = {
   id: string;
   dayOfWeek: number;
@@ -8,6 +14,7 @@ export type SlotTemplate = {
 export type Booking = {
   slotId: string;
   date: string;
+  sucursalId: string;
   bookedAt: string;
 };
 
@@ -18,4 +25,5 @@ export type DaySlot = {
   capacity: number;
   taken: number;
   mine: boolean;
+  sucursalId: string;
 };
