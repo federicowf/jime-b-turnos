@@ -2,12 +2,17 @@
 
 import { useEffect } from "react";
 import type { DaySlot } from "@/lib/types";
-import { addBooking, removeBooking } from "@/lib/store";
+import { addBooking, removeBooking, useUser } from "@/lib/store";
+import { useData, useSucursalById } from "@/lib/data";
 import { dayNameFull, parseISODate } from "@/lib/fmt";
-import { sucursalById } from "@/lib/mock";
 import { MapPin } from "lucide-react";
 
 export function SlotSheet({ slot, onClose }: { slot: DaySlot | null; onClose: () => void }) {
+  const { sheetActive, reservar, cancelar } = useData();
+  const sucursal = useSucursalById(slot?.sucursalId ?? "");
+  const user = useUser();
+  const [name, phone] = (user ?? "|").split("|");
+
   useEffect(() => {
     if (!slot) return;
     const prev = document.body.style.overflow;
@@ -21,15 +26,23 @@ export function SlotSheet({ slot, onClose }: { slot: DaySlot | null; onClose: ()
 
   const date = parseISODate(slot.date);
   const dayName = dayNameFull(date);
-  const sucursal = sucursalById(slot.sucursalId);
   const free = slot.capacity - slot.taken;
   const isFull = free <= 0 && !slot.mine;
 
   function handleAction() {
+    const r = {
+      fecha: slot!.date,
+      hora: slot!.time,
+      sucursalId: slot!.sucursalId,
+      nombre: name ?? "",
+      telefono: phone ?? "",
+    };
     if (slot!.mine) {
-      removeBooking(slot!.templateId, slot!.date, slot!.sucursalId);
+      if (sheetActive) cancelar(r);
+      else removeBooking(slot!.templateId, slot!.date, slot!.sucursalId);
     } else if (!isFull) {
-      addBooking(slot!.templateId, slot!.date, slot!.sucursalId);
+      if (sheetActive) reservar(r);
+      else addBooking(slot!.templateId, slot!.date, slot!.sucursalId);
     }
     onClose();
   }

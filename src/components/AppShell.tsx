@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useBookings, useUser, useStorageSync } from "@/lib/store";
+import { useState } from "react";
+import { useBookings, useUser, useStorageSync, useHydrated } from "@/lib/store";
+import { useData, DataProvider } from "@/lib/data";
 import { toISODate } from "@/lib/fmt";
 import { LoginGate } from "./LoginGate";
 import { TurnosView } from "./TurnosView";
@@ -10,18 +11,23 @@ import { PerfilView } from "./PerfilView";
 import { BottomNav, type Tab } from "./BottomNav";
 
 export function AppShell() {
-  const [hydrated, setHydrated] = useState(false);
+  return (
+    <DataProvider>
+      <AppShellInner />
+    </DataProvider>
+  );
+}
+
+function AppShellInner() {
+  const hydrated = useHydrated();
   const user = useUser();
   const bookings = useBookings();
+  const { ready } = useData();
   const [tab, setTab] = useState<Tab>("turnos");
 
   useStorageSync();
 
-  useEffect(() => {
-    setHydrated(true);
-  }, []);
-
-  if (!hydrated) {
+  if (!hydrated || !ready) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 to-accent grid place-items-center text-white font-bold text-xl shadow-lg shadow-brand-500/20">

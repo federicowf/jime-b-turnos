@@ -1,11 +1,12 @@
 "use client";
 
 import { MapPin } from "lucide-react";
-import { SUCURSALES } from "@/lib/mock";
 import { setSucursal, useSucursal } from "@/lib/store";
+import { useData } from "@/lib/data";
 
 export function SucursalSwitcher() {
   const current = useSucursal();
+  const { sucursales: SUCURSALES } = useData();
 
   return (
     <div className="px-5 pt-1 pb-2">

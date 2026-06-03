@@ -1,8 +1,9 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { SLOT_TEMPLATES, preloadedTakenFor } from "@/lib/mock";
-import { useBookings, useSucursal } from "@/lib/store";
+import { buildTemplates, preloadedTakenFor } from "@/lib/mock";
+import { useBookings, useSucursal, useUser } from "@/lib/store";
+import { useData } from "@/lib/data";
 import { dayNameFull, monthShort, nextDays, toISODate } from "@/lib/fmt";
 import type { DaySlot } from "@/lib/types";
 import { WeekStrip } from "./WeekStrip";
@@ -20,6 +21,11 @@ export function TurnosView() {
   const [openSlot, setOpenSlot] = useState<DaySlot | null>(null);
   const bookings = useBookings();
   const sucursalId = useSucursal();
+  const { config, sheetActive, reservas } = useData();
+  const user = useUser();
+  const phone = (user ?? "|").split("|")[1] ?? "";
+
+  const templates = useMemo(() => buildTemplates(config), [config]);
 
   const days = useMemo(() => {
     const start = new Date();
@@ -29,23 +35,37 @@ export function TurnosView() {
   const slotsForDay = useMemo<DaySlot[]>(() => {
     const dow = selected.getDay();
     const iso = toISODate(selected);
-    const mineSet = new Set(
-      bookings.filter((b) => b.date === iso && b.sucursalId === sucursalId).map((b) => b.slotId),
-    );
-    return SLOT_TEMPLATES.filter((t) => t.dayOfWeek === dow).map((t) => {
-      const preloaded = preloadedTakenFor(t.id, iso, t.capacity, sucursalId);
-      const mine = mineSet.has(t.id);
-      return {
-        templateId: t.id,
-        date: iso,
-        time: t.time,
-        capacity: t.capacity,
-        taken: Math.min(t.capacity, preloaded + (mine ? 1 : 0)),
-        mine,
-        sucursalId,
-      };
-    });
-  }, [selected, bookings, sucursalId]);
+    return templates
+      .filter((t) => t.dayOfWeek === dow)
+      .map((t) => {
+        let taken: number;
+        let mine: boolean;
+        if (sheetActive) {
+          // Cupos reales: contamos las reservas de la planilla.
+          const matches = reservas.filter(
+            (r) => r.fecha === iso && r.hora === t.time && r.sucursalId === sucursalId,
+          );
+          taken = Math.min(t.capacity, matches.length);
+          mine = matches.some((r) => r.telefono === phone);
+        } else {
+          // Modo demo: ocupación de ejemplo.
+          const preloaded = preloadedTakenFor(t.id, iso, t.capacity, sucursalId);
+          mine = bookings.some(
+            (b) => b.date === iso && b.slotId === t.id && b.sucursalId === sucursalId,
+          );
+          taken = Math.min(t.capacity, preloaded + (mine ? 1 : 0));
+        }
+        return {
+          templateId: t.id,
+          date: iso,
+          time: t.time,
+          capacity: t.capacity,
+          taken,
+          mine,
+          sucursalId,
+        };
+      });
+  }, [selected, bookings, sucursalId, templates, sheetActive, reservas, phone]);
 
   const isClosed = slotsForDay.length === 0;
 

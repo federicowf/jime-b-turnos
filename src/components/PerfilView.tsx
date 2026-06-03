@@ -2,12 +2,14 @@
 
 import { clearUser, useUser } from "@/lib/store";
 import { formatPhone } from "@/lib/fmt";
-import { GYM, SUCURSALES } from "@/lib/mock";
+import { GYM } from "@/lib/mock";
+import { useData } from "@/lib/data";
 import { BrandHeader } from "./BrandHeader";
 import { AtSign, LogOut, MapPin, Phone } from "lucide-react";
 
 export function PerfilView() {
   const user = useUser();
+  const { sucursales: SUCURSALES } = useData();
   const [name, phone] = (user ?? "|").split("|");
 
   return (

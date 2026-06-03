@@ -19,25 +19,37 @@ export function sucursalById(id: string): Sucursal {
   return SUCURSALES.find((s) => s.id === id) ?? SUCURSALES[0];
 }
 
-// Los turnos se arman automáticamente a partir de CONFIG (ver config.ts).
-export const SLOT_TEMPLATES: SlotTemplate[] = (() => {
+export type TurnosConfig = {
+  cuposPorClase: number;
+  horariosManana: string[];
+  horariosTarde: string[];
+  diasAbiertos: number[];
+  soloMananaLos: number[];
+};
+
+// Arma la lista de turnos a partir de una configuración
+// (la de config.ts en modo demo, o la de la planilla cuando está conectada).
+export function buildTemplates(cfg: TurnosConfig): SlotTemplate[] {
   const out: SlotTemplate[] = [];
-  for (const dow of CONFIG.diasAbiertos) {
-    const soloManana = CONFIG.soloMananaLos.includes(dow);
+  for (const dow of cfg.diasAbiertos) {
+    const soloManana = cfg.soloMananaLos.includes(dow);
     const times = soloManana
-      ? CONFIG.horariosManana
-      : [...CONFIG.horariosManana, ...CONFIG.horariosTarde];
+      ? cfg.horariosManana
+      : [...cfg.horariosManana, ...cfg.horariosTarde];
     for (const time of times) {
       out.push({
         id: `${dow}-${time}`,
         dayOfWeek: dow,
         time,
-        capacity: CONFIG.cuposPorClase,
+        capacity: cfg.cuposPorClase,
       });
     }
   }
   return out;
-})();
+}
+
+// Turnos por defecto (modo demo).
+export const SLOT_TEMPLATES: SlotTemplate[] = buildTemplates(CONFIG);
 
 function hash(str: string): number {
   let h = 2166136261;
