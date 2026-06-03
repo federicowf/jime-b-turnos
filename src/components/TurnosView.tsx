@@ -47,7 +47,7 @@ export function TurnosView() {
     });
   }, [selected, bookings, sucursalId]);
 
-  const isClosed = selected.getDay() === 0;
+  const isClosed = slotsForDay.length === 0;
 
   return (
     <>
@@ -58,8 +58,8 @@ export function TurnosView() {
       <main className="px-5 pb-32">
         {isClosed ? (
           <EmptyState
-            title="Domingo cerrado"
-            description="Volvemos el lunes con todos los horarios."
+            title="Día cerrado"
+            description="Este día no tiene turnos. Elegí otro día arriba."
           />
         ) : (
           <>

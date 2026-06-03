@@ -1,4 +1,5 @@
 import type { SlotTemplate, Sucursal } from "./types";
+import { CONFIG } from "./config";
 
 export const GYM = {
   name: "Jime B",
@@ -18,20 +19,20 @@ export function sucursalById(id: string): Sucursal {
   return SUCURSALES.find((s) => s.id === id) ?? SUCURSALES[0];
 }
 
-const MORNING = ["07:00", "08:00", "09:00", "10:00"];
-const EVENING = ["17:00", "18:00", "19:00", "20:00", "21:00"];
-const ALL_TIMES = [...MORNING, ...EVENING];
-
+// Los turnos se arman automáticamente a partir de CONFIG (ver config.ts).
 export const SLOT_TEMPLATES: SlotTemplate[] = (() => {
   const out: SlotTemplate[] = [];
-  for (let dow = 1; dow <= 6; dow++) {
-    const times = dow === 6 ? MORNING : ALL_TIMES;
+  for (const dow of CONFIG.diasAbiertos) {
+    const soloManana = CONFIG.soloMananaLos.includes(dow);
+    const times = soloManana
+      ? CONFIG.horariosManana
+      : [...CONFIG.horariosManana, ...CONFIG.horariosTarde];
     for (const time of times) {
       out.push({
         id: `${dow}-${time}`,
         dayOfWeek: dow,
         time,
-        capacity: 8,
+        capacity: CONFIG.cuposPorClase,
       });
     }
   }
